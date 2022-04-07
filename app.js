@@ -9,6 +9,11 @@ const app = express();
 
 app.set('view engine', 'ejs');
 
+
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
+
 //connect to database
 mongoose.connect("mongodb://localhost:27017/wikiDB", {
   useNewUrlParser: true
@@ -26,9 +31,105 @@ const Article = mongoose.model("Article", articleSchema);
 
 
 
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
+//////////////////Requests Targetting all articles //////////////////
+
+
+app.route("/articles")
+.get(function(req, res){
+  Article.find(function(err, foundArticles){
+    if(!err){
+      res.send(foundArticles);
+    } else {
+      res.send(err);
+    }
+  });
+})
+
+.post(function(req, res){
+  //save the data in database
+  const newArticle = new Article({
+    title: req.body.title,
+    content: req.body.content
+  });
+
+  newArticle.save(function(err){
+    if(!err){
+      res.send("Succesfully added a new article.")
+    } else {
+      res.send(err);
+    }
+  });
+})
+
+.delete(function(req,res){
+  Article.deleteMany(function(err){
+    if(!err){
+      res.send("Succesfully deleted all articles");
+    } else {
+      res.send(err);
+    }
+  });
+});
+
+
+//////////////////Requests Targetting a specific articles //////////////////
+app.route("/articles/:artictleTitle/")
+
+  // req.params.artictleTitle = "title"
+
+  .get(function(req, res){
+    Article.findOne({title: req.params.artictleTitle}, function(err, foundArticle){
+      if (foundArticle){
+        res.send(foundArticle);
+      } else {
+        res.send("No articles matching that title was found.");
+      }
+    });
+  })
+
+  .put(function(req, res){
+    Article.replaceOne(
+      {title: req.params.artictleTitle},
+      {title: req.body.title, content: req.body.content},
+      {overwrite: true},
+      function(err){
+        if(!err){
+          res.send("Succesfully updated article.");
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  })
+
+  .patch(function(req, res){
+    Article.update(
+      {title: req.params.artictleTitle},
+      {$set: req.body},
+      function(err){
+        if(!err){
+          res.send("Succesfully updated article");
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  })
+
+  .delete(function(req, res){
+    Article.deleteOne(
+      {title: req.params.artictleTitle},
+      function(err){
+        if(!err){
+          res.send("Succesfully deleted specific article");
+        } else {
+          res.send(err);
+        }
+      }
+    );
+  });
+
+
 app.use(express.static("public"));
 
 
