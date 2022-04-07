@@ -9,6 +9,7 @@ const app = express();
 
 app.set('view engine', 'ejs');
 
+app.use(express.static("public"));
 
 app.use(bodyParser.urlencoded({
   extended: true
@@ -128,9 +129,6 @@ app.route("/articles/:artictleTitle/")
       }
     );
   });
-
-
-app.use(express.static("public"));
 
 
 app.listen(3000, function() {
